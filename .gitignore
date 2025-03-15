@@ -50,6 +50,7 @@ results/
 test_results.json
 output.png
 References/
+debug_env.py
 
 # OS specific
 .DS_Store

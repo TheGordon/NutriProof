@@ -1,4 +1,4 @@
-# Backend FactChecker
+# Backend Fact Checker
 
 ## Features/Workflow
 
