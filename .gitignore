@@ -32,6 +32,7 @@ ENV/
 .vscode/
 *.swp
 *.swo
+.cursor/rules/
 
 # Logs and databases
 *.log

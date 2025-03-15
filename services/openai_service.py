@@ -9,7 +9,7 @@ class OpenAIService:
     def __init__(self):
         # Initialize OpenAI client with API key from environment
         self.client = OpenAI(
-            api_key=os.getenv('OPENAI_API_KEY', "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")
+            api_key=os.getenv('OPENAI_API_KEY')
         )
         self.model = "gpt-4o"
     

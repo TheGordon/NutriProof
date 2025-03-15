@@ -9,7 +9,7 @@ load_dotenv()
 class WolframService:
     def __init__(self):
         # Wolfram Alpha API key from environment
-        self.appid = os.getenv('WOLFRAM_APPID', 'TE5LTA-52E55X9PWU')
+        self.appid = os.getenv('WOLFRAM_APPID')
         self.base_url = "https://api.wolframalpha.com/v1/result"
     
     def verify_claim(self, query):
