@@ -1,25 +1,16 @@
-# GPT-4o & Wolfram Alpha Fact-Checking Assistant
+#Backend FactChecker
 
-A powerful fact-checking system that utilizes GPT-4o to identify factual claims in text and Wolfram Alpha to computationally verify those claims.
+## Features/Workflow
 
-## Features
+- Utilizes GPT-4o to extract factual claims from input text
+- Reformats claims into queries optimized for Wolfram Alpha
+- Processes claims through Wolfram Alpha for mathematical/factual accuracy
+- enerates JSON records of claims, verification steps, and results
+- Maintains a timestamped history of all fact-checking operations
 
-- **Automated Claim Identification**: Utilizes GPT-4o to extract factual claims from input text
-- **Intelligent Query Optimization**: Reformats claims into queries optimized for Wolfram Alpha
-- **Computational Verification**: Processes claims through Wolfram Alpha for mathematical/factual accuracy
-- **Structured Data Output**: Generates JSON records of claims, verification steps, and results
-- **Result Storage**: Maintains a timestamped history of all fact-checking operations
 
-## Getting Started
 
-### Prerequisites
-
-- Python 3.8+
-- Flask
-- OpenAI API key (included)
-- Wolfram Alpha API key (included)
-
-### Installation
+## Installation
 
 1. Clone the repository
 2. Install dependencies:
@@ -93,12 +84,3 @@ headers = {"Content-Type": "application/json"}
 response = requests.post(url, data=json.dumps(payload), headers=headers)
 print(response.json())
 ```
-
-## Architecture
-
-The system follows a modular architecture:
-
-1. **Flask API**: Handles HTTP requests and responses
-2. **FactChecker Service**: Coordinates the entire fact-checking pipeline
-3. **OpenAI Service**: Manages interactions with GPT-4o API
-4. **Wolfram Service**: Manages interactions with Wolfram Alpha API
