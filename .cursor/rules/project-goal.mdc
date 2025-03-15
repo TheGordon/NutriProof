@@ -1,0 +1,68 @@
+---
+description: Project Goal
+globs: 
+alwaysApply: false
+---
+## Detailed Project Description: GPT-4o & Wolfram Alpha Fact-Checking Assistant
+
+### Project Overview:
+The goal of this project is to create an automated, reliable fact-checking system powered by GPT-4o and the Wolfram Alpha API. This AI-driven system will identify claims within any provided text, validate these claims computationally through Wolfram Alpha, and store a structured record indicating the accuracy of each claim. You are to create a backend endpoint using python Flask or other tools you may prefer.
+
+### Functional Objectives:
+1. **Claim Identification:**
+   - Utilize GPT-4o to analyze input text and automatically identify factual claims that are computationally verifiable.
+   - Clearly delineate claims that can feasibly be validated using computational data.
+
+2. **Claim Restructuring:**
+   - GPT-4o will rephrase identified claims into concise, computationally verifiable questions, optimized specifically for Wolfram Alpha's input structure.
+   - Ensure clarity, accuracy, and precision in restructuring these claims to maximize validity.
+
+3. **Claim Verification:**
+   - Submit restructured queries to Wolfram Alpha’s API.
+   - Retrieve accurate computational responses from Wolfram Alpha.
+   - Use GPT-4o to interpret Wolfram Alpha's responses and explicitly determine whether each claim is true or false based on the computational evidence provided.
+
+4. **Result Storage:**
+   - Generate a structured data file (JSON or CSV format recommended) clearly listing each original claim, the corresponding Wolfram Alpha query, Wolfram Alpha’s computational response, and the final determination of the claim's accuracy (true or false).
+
+### Example Workflow:
+- **Input Text Example:** "The radius of the Earth is 6,371 kilometers. The speed of light is approximately 300,000 kilometers per second."
+  
+- **GPT-4o Identification and Restructuring:**
+  - Claim 1: "The radius of the Earth is 6,371 kilometers." → "What is the radius of the Earth in kilometers?"
+  - Claim 2: "The speed of light is approximately 300,000 kilometers per second." → "What is the speed of light in kilometers per second?"
+
+- **Wolfram Alpha Verification:**
+  - Query and retrieve factual data for each claim.
+
+- **Final Structured Output:**
+  ```json
+  [
+    {
+      "claim": "The radius of the Earth is 6,371 kilometers.",
+      "wolfram_query": "What is the radius of the Earth in kilometers?",
+      "wolfram_response": "Earth radius ≈ 6371 km",
+      "verification": "True"
+    },
+    {
+      "claim": "The speed of light is approximately 300,000 kilometers per second.",
+      "wolfram_query": "What is the speed of light in kilometers per second?",
+      "wolfram_response": "Speed of light = 299,792 km/s",
+      "verification": "Approximately True"
+    }
+  ]
+  ```
+
+### Technical Guidelines:
+- Employ GPT-4o for advanced natural language understanding, parsing, and query optimization.
+- Leverage Wolfram Alpha API strictly for computational accuracy and factual verification.
+- Maintain robust error handling, managing cases where claims cannot be computationally verified.
+
+### Deliverables:
+- A functional prototype capable of processing text inputs, verifying claims, and outputting structured data.
+- Clear and comprehensive documentation for setup, use, and potential improvements.
+
+This structured description will serve as your detailed guideline for the AI to build this sophisticated and accurate GPT-4o & Wolfram Alpha-powered fact-checking system.
+
+Additional info: the files within the reference folder contain examples of how to use Wolfram and GPT Api. They also contain my keys for you to use.
+
