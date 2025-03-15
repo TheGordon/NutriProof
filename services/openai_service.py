@@ -1,16 +1,20 @@
 from openai import OpenAI
 import os
+import pathlib
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Get absolute path to .env file and force reload it
+env_path = pathlib.Path('.env').absolute()
+load_dotenv(dotenv_path=env_path, override=True)
 
 class OpenAIService:
     def __init__(self):
-        # Initialize OpenAI client with API key from environment
-        self.client = OpenAI(
-            api_key=os.getenv('OPENAI_API_KEY')
-        )
+        # Initialize OpenAI client with API key directly from environment
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment variables!")
+            
+        self.client = OpenAI(api_key=api_key)
         self.model = "gpt-4o"
     
     def identify_claims(self, text):

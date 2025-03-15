@@ -1,15 +1,20 @@
 import requests
 from urllib.parse import quote_plus
 import os
+import pathlib
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Get absolute path to .env file and force reload it
+env_path = pathlib.Path('.env').absolute()
+load_dotenv(dotenv_path=env_path, override=True)
 
 class WolframService:
     def __init__(self):
-        # Wolfram Alpha API key from environment
+        # Get Wolfram Alpha API key directly from environment
         self.appid = os.getenv('WOLFRAM_APPID')
+        if not self.appid:
+            raise ValueError("WOLFRAM_APPID not found in environment variables!")
+            
         self.base_url = "https://api.wolframalpha.com/v1/result"
     
     def verify_claim(self, query):
