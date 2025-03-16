@@ -229,3 +229,44 @@ summary:hover {
 .check-again-button:active {
   background-color: #0b7ad1;
 } 
+
+/* Grade container */
+
+.grade-summary {
+  text-align: center;
+  margin: 10px 0 15px;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+}
+
+.grade-simple {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.grade-letter {
+  font-size: 22px;
+  font-weight: bold;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: white;
+}
+
+.grade-info {
+  font-size: 14px;
+  color: #333;
+}
+
+.grade-a { background-color: #2e7d32; }
+.grade-b { background-color: #4caf50; }
+.grade-c { background-color: #ffc107; }
+.grade-d { background-color: #ff9800; }
+.grade-f { background-color: #c62828; }
+.grade-na { background-color: #757575; }
