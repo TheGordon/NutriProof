@@ -200,19 +200,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
       clearResultsContent();
 
-      // Create a standard chart container
+      // Calculate grade first
+      const grade = calculateGrade(results);
+      console.log('Calculated grade:', grade);
+
+      // Create a grade display BEFORE the chart (moved up)
+      const gradeDisplay = document.createElement('div');
+      gradeDisplay.className = 'grade-summary';
+      gradeDisplay.innerHTML = `
+        <div class="grade-simple">
+          <span class="grade-letter grade-${grade.letter.toLowerCase()}">${grade.letter}</span>
+          <div class="grade-details">
+            <span class="grade-score">${grade.letter !== 'N/A' ? grade.score + '/10' : ''}</span>
+            <span class="grade-description">${grade.description}</span>
+          </div>
+        </div>
+      `;
+      
+      // Get the results container and insert the grade at the top
+      const resultsContainer = document.getElementById('results-container');
       const chartContainer = document.getElementById('chart-container');
+      
+      // Insert grade before chart container
+      resultsContainer.insertBefore(gradeDisplay, chartContainer);
+      
+      // Now set up the chart (which will be below the grade)
+      chartContainer.style.height = '250px'; // Make chart smaller
       const canvas = document.createElement('canvas');
       canvas.id = 'verification-chart';
       chartContainer.appendChild(canvas);
 
-      const grade = calculateGrade(results);
-      console.log('Calculated grade:', grade);
-
       // Attempt to create chart with proper error handling
       try {
         console.log('Creating chart with results:', results);
-        createVerificationChart(results); // Using original chart implementation
+        createVerificationChart(results);
       } catch (e) {
         console.error('Error creating chart:', e);
         chartContainer.innerHTML = `
@@ -221,17 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <p>Results will still be displayed below.</p>
           </div>`;
       }
-
-      // Create a simple grade display under the chart
-      const gradeDisplay = document.createElement('div');
-      gradeDisplay.className = 'grade-summary';
-      gradeDisplay.innerHTML = `
-        <div class="grade-simple">
-          <span class="grade-letter grade-${grade.letter.toLowerCase()}">${grade.letter}</span>
-          <span class="grade-info">${grade.letter !== 'N/A' ? grade.score + '/10' : ''} - ${grade.description}</span>
-        </div>
-      `;
-      chartContainer.after(gradeDisplay);
       
       // Create result cards for each claim
       resultsList.innerHTML = '';
@@ -278,16 +288,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   //Helper to clear content
   function clearResultsContent() {
+    // Remove any existing grade summary
+    const existingGradeSummary = document.querySelector('.grade-summary');
+    if (existingGradeSummary) {
+      existingGradeSummary.remove();
+    }
+    
+    // Clear chart container
     const chartContainer = document.getElementById('chart-container');
     chartContainer.innerHTML = '';
+    chartContainer.style.height = '250px'; // Reset height
 
     if (chartInstance) {
       chartInstance.destroy();
       chartInstance = null;
     }
-
-    const gradeContainer = document.querySelector('.grade-summary');
-    if(gradeContainer) {gradeContainer.innerHTML = '';}
+    
+    // Clear results list
+    const resultsList = document.getElementById('results-list');
+    resultsList.innerHTML = '';
   }
   
   function createVerificationChart(results) {
@@ -320,17 +339,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Define colors for the pie chart
     const chartColors = {
-      'True': '#2e7d32', // Green
+      'True': '#4caf50', // Green
       'False': '#c62828', // Red
-      'Approximately True': '#4caf50', // Light green
-      'Approximately False': '#f44336', // Light red
-      'Inconclusive': '#ffc107' // Amber
+      'Approximately True': '#89a832', // Light green
+      'Approximately False': '#ffc107', // Light red
+      'Inconclusive': '#777875' // Grey
     };
     
-    // Filter out zero values
-    const labels = Object
-      .keys(verificationCounts)
-      .filter(key => verificationCounts[key] > 0);
+    // Define a specific order to group similar verification types together
+    const orderedLabels = ['True', 'Approximately True', 'False', 'Approximately False', 'Inconclusive'];
+    
+    // Filter out zero values while maintaining the desired order
+    const labels = orderedLabels.filter(key => verificationCounts[key] > 0);
     const data = labels.map(key => verificationCounts[key]);
     const backgroundColor = labels.map(key => chartColors[key]);
     
