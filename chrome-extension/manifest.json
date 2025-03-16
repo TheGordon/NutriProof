@@ -4,7 +4,7 @@
   "description": "Fact-check nutrition and health claims using GPT-4o and Wolfram Alpha",
   "manifest_version": 3,
   "permissions": ["contextMenus", "activeTab", "scripting", "storage"],
-  "host_permissions": ["http://localhost:5000/*"],
+  "host_permissions": ["http://localhost:5001/*"],
   "background": {
     "service_worker": "js/background.js"
   },

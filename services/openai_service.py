@@ -2,117 +2,159 @@ from openai import OpenAI
 import os
 import pathlib
 from dotenv import load_dotenv
+import json
 
-# Get absolute path to .env file and force reload it
 env_path = pathlib.Path('.env').absolute()
 load_dotenv(dotenv_path=env_path, override=True)
 
 class OpenAIService:
     def __init__(self):
-        # Initialize OpenAI client with API key directly from environment
         api_key = os.getenv('OPENAI_API_KEY')
         if not api_key:
             raise ValueError("OPENAI_API_KEY not found in environment variables!")
-            
         self.client = OpenAI(api_key=api_key)
+        # After fine-tuning, replace "gpt-4o" with your custom model: "davinci:ft-your-org-your-model-id"
         self.model = "gpt-4o"
     
     def identify_claims(self, text):
         """
-        Use GPT-4o to identify factual claims in the text that can be verified
-        through Wolfram Alpha
+        Use GPT to identify factual claims in the text that can be verified via Wolfram Alpha.
+        Returns a list of claim strings.
         """
         prompt = f"""
-        Analyze the following text and identify specific factual claims that can be 
-        computationally verified using Wolfram Alpha. Focus on claims involving:
-        - Mathematical calculations
-        - Scientific constants
-        - Geographic information
-        - Historical dates
-        - Physical measurements
-        - Population statistics
-        - Other factual, quantitative information
-        
-        Extract ONLY claims that can be verified through computation or factual lookup.
-        Return only a JSON array of strings, with each string being a single claim.
-        
+        Analyze the following text and identify specific factual claims that can be computationally verified using Wolfram Alpha. 
+        Return ONLY a JSON array of strings, each string being one verifiable claim.
+
         Text to analyze:
         {text}
         """
-        
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},
         )
-        
         content = response.choices[0].message.content
-        import json
+        
+        # Attempt to parse JSON
         try:
-            # Try to parse the response as JSON and extract the claims array
-            result = json.loads(content)
-            if isinstance(result, dict) and "claims" in result:
-                return result["claims"]
-            else:
-                # Fall back to returning the entire content if parsing fails
-                return [claim for claim in content.strip('[]').split('","')]
-        except:
-            # If JSON parsing fails, fall back to the raw response (for debugging)
-            return [content]
+            data = json.loads(content)
+            if isinstance(data, list):
+                return data
+            if isinstance(data, dict) and "claims" in data:
+                return data["claims"]
+            return [content]  # fallback
+        except Exception:
+            return [content]  # fallback
     
     def optimize_for_wolfram(self, claim):
         """
-        Rephrase a claim into a query optimized for Wolfram Alpha
+        Rephrase a claim into a concise query for Wolfram Alpha's Full Results API.
         """
         prompt = f"""
-        Convert the following factual claim into a concise, clear query optimized for Wolfram Alpha.
-        Extract only the factual claims, not opinions or questions.
-        The query should be straightforward and directly solvable by Wolfram Alpha's computational engine.
-        Return only the optimized query as plain text, without any explanations or additional formatting.
-        Do NOT ask Wolfram Alpha questions, just provide the query. Avoid prepositions and conjunctions.
-        Example: "What is the capital of France?" -> "France Capital"
-        Example: "What is the population of the moon?" -> "Moon Population"
-        Example: "Number of bones in human body" -> "Human Body Bones Number"
+        Before completing the task below, keep in mind that you should focus on optimizing your query to have the highest chance of getting relevant information from Wolfram Alpha's API primarily for the following kinds of data: mathematical calculations, physical exercise, public health, blood alcohol content, nutrition, food preparation, food comparisons, dietary references, personal health, drugs and prescriptions, food compositions, child growth, US food prices, and food science—just know that whatever claim you may be creating a claim about will most likely have to do with one of those categories. Convert this claim into a concise query suitable for Wolfram Alpha's Full Results API:
         Claim: {claim}
+
+        Return just the exact query text (IN PURE PLAINTEXT) and absolutely nothing else, because your response will be directly used as the query to the Wolfram Alpha API.
         """
-        
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}]
         )
-        
         return response.choices[0].message.content.strip()
     
-    def interpret_verification(self, claim, wolfram_query, wolfram_response):
+    def generate_final_answer_with_verdict(self, claim, wolfram_query, wolfram_response):
         """
-        Interpret the Wolfram Alpha response to determine if the claim is true
+        1. Compare the claim to the wolfram_response.
+        2. Produce a short verdict: "True", "False", "Approximately True", "Approximately False", or "Inconclusive".
+        3. Produce a longer explanation referencing the data from Wolfram.
+
+        Return (verdict, explanation).
         """
-        prompt = f"""
-        Based on the Wolfram Alpha response, determine whether the original claim is true, false, 
-        or if the verification is inconclusive. Consider approximate values and reasonable margins of error.
+        # Determine if Wolfram returned valid data
+        wolfram_data_ok = True
+        if ("No plaintext result found" in wolfram_response or
+            "No 'Result' pod found" in wolfram_response or
+            "Error:" in wolfram_response):
+            wolfram_data_ok = False
         
-        Original claim: {claim}
-        Query sent to Wolfram Alpha: {wolfram_query}
-        Wolfram Alpha response: {wolfram_response}
-        
-        Return ONLY one of these exact values: "True", "False", "Approximately True", "Approximately False", or "Inconclusive"
-        """
-        
+        if wolfram_data_ok:
+            prompt = f"""
+            You are a fact-checking assistant. We have:
+            - Original claim: {claim}
+            - Wolfram query: {wolfram_query}
+            - Wolfram Alpha plaintext result: {wolfram_response}
+
+            1) Decide if the claim is fully correct, partially correct, or incorrect based on the Wolfram data.
+               - If numeric values are close, it might be "True" or "Approximately True".
+               - If they differ significantly, "False" or "Approximately False".
+               - If data is missing or unclear, "Inconclusive".
+            2) Provide a short verdict (one of "True", "False", "Approximately True", "Approximately False", or "Inconclusive").
+            3) Provide a short but clear explanation referencing the data from Wolfram.
+
+            Return your answer as valid JSON in the format:
+            {{
+              "verdict": "...",
+              "explanation": "..."
+            }}
+            Only output the JSON object, nothing else.
+            """
+        else:
+            prompt = f"""
+            You are a fact-checking assistant. We have:
+            - Original claim: {claim}
+            - Wolfram query: {wolfram_query}
+            - Wolfram Alpha plaintext result: {wolfram_response} (which is not usable or missing)
+
+            Since Wolfram data is unavailable or invalid, use your own reasoning to judge the claim.
+            Provide:
+            1) A short verdict (one of "True", "False", "Approximately True", "Approximately False", or "Inconclusive").
+            2) A short explanation referencing the claim itself (since Wolfram data is missing).
+            
+            Return your answer as valid JSON in the format:
+            {{
+              "verdict": "...",
+              "explanation": "..."
+            }}
+            Only output the JSON object, nothing else.
+            """
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}]
         )
+        raw_output = response.choices[0].message.content.strip()
         
-        verification = response.choices[0].message.content.strip()
+        # Remove triple backticks and any markdown formatting if present
+        cleaned_output = raw_output.replace("```json", "").replace("```", "").strip()
         
-        # Normalize output to one of the expected values
-        valid_outputs = ["True", "False", "Approximately True", "Approximately False", "Inconclusive"]
-        if verification not in valid_outputs:
-            # Try to match with the closest valid output
-            for valid in valid_outputs:
-                if valid.lower() in verification.lower():
-                    return valid
-            # Default to Inconclusive if no match
-            return "Inconclusive"
-            
-        return verification 
+        # Attempt to parse the cleaned JSON
+        try:
+            parsed = json.loads(cleaned_output)
+            verdict = parsed.get("verdict", "Inconclusive")
+            explanation = parsed.get("explanation", "No explanation provided.")
+        except Exception as e:
+            verdict = "Inconclusive"
+            explanation = f"Could not parse GPT response as JSON. Raw output:\n{raw_output}\nError: {str(e)}"
+        
+        return verdict, explanation
+
+    def interpret_verification(self, claim, wolfram_query, wolfram_response):
+        """
+        Legacy method to interpret the Wolfram response. Not used if we rely on generate_final_answer_with_verdict.
+        """
+        prompt = f"""
+        Based on the Wolfram Alpha response, determine whether the original claim is 
+        "True", "False", "Approximately True", "Approximately False", or "Inconclusive".
+        Original claim: {claim}
+        Wolfram query: {wolfram_query}
+        Wolfram response: {wolfram_response}
+        """
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = response.choices[0].message.content.strip()
+        valid = ["True", "False", "Approximately True", "Approximately False", "Inconclusive"]
+        for v in valid:
+            if v.lower() in text.lower():
+                return v
+        return "Inconclusive"

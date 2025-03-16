@@ -12,57 +12,49 @@ class FactChecker:
     def process_text(self, text):
         """
         Process text through the fact-checking pipeline:
-        1. Identify claims with GPT-4o
-        2. Convert claims to Wolfram queries
-        3. Verify claims with Wolfram Alpha
-        4. Store results
+        1. Identify claims with GPT
+        2. Convert claims to Wolfram-optimized queries
+        3. Query Wolfram Alpha for verified info
+        4. Have GPT produce a final verdict & explanation that references the Wolfram data
+        5. Store results
         """
         # Step 1: Identify claims
         claims = self.openai_service.identify_claims(text)
         
-        # Step 2 & 3: Process each claim and verify with Wolfram
         results = []
         for claim in claims:
-            # Get Wolfram-optimized query for this claim
+            # Step 2: Optimize claim for Wolfram
             wolfram_query = self.openai_service.optimize_for_wolfram(claim)
             
-            # Get verification from Wolfram Alpha
+            # Step 3: Retrieve verified info from Wolfram
             wolfram_response = self.wolfram_service.verify_claim(wolfram_query)
             
-            # Use GPT to determine if claim is true based on Wolfram response
-            verification = self.openai_service.interpret_verification(
-                claim, 
-                wolfram_query, 
-                wolfram_response
+            # Step 4: GPT final answer with verdict + explanation referencing Wolfram
+            verdict, explanation = self.openai_service.generate_final_answer_with_verdict(
+                claim, wolfram_query, wolfram_response
             )
             
-            # Store result
+            # Gather final result
             result = {
                 "claim": claim,
                 "wolfram_query": wolfram_query,
                 "wolfram_response": wolfram_response,
-                "verification": verification
+                "verdict": verdict,         # e.g. "True", "False", etc.
+                "final_answer": explanation # The longer explanation referencing the data
             }
             results.append(result)
         
-        # Step 4: Store results
+        # Step 5: Optionally store results in JSON
         self._store_results(results)
-        
         return results
     
     def _store_results(self, results):
         """
         Store the results of fact-checking in a JSON file
         """
-        # Create results directory if it doesn't exist
         os.makedirs('results', exist_ok=True)
-        
-        # Create filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"results/fact_check_{timestamp}.json"
-        
-        # Write results to file
         with open(filename, 'w') as f:
             json.dump(results, f, indent=2)
-            
-        return filename 
+        return filename

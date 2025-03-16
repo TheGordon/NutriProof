@@ -1,5 +1,5 @@
 // Background script for the NutriProof Chrome Extension
-const API_URL = 'http://localhost:5000/api/fact-check';
+const API_URL = 'http://localhost:5001/api/fact-check';
 
 // Create a context menu item when the extension is installed
 chrome.runtime.onInstalled.addListener(() => {

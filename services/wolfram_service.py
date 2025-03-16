@@ -3,69 +3,44 @@ from urllib.parse import quote_plus
 import os
 import pathlib
 from dotenv import load_dotenv
+import xml.etree.ElementTree as ET
 
-# Get absolute path to .env file and force reload it
 env_path = pathlib.Path('.env').absolute()
 load_dotenv(dotenv_path=env_path, override=True)
 
 class WolframService:
     def __init__(self):
-        # Get Wolfram Alpha API key directly from environment
         self.appid = os.getenv('WOLFRAM_APPID')
         if not self.appid:
             raise ValueError("WOLFRAM_APPID not found in environment variables!")
-            
-        self.base_url = "https://api.wolframalpha.com/v1/result"
+        self.base_url = "https://api.wolframalpha.com/v2/query"
     
     def verify_claim(self, query):
         """
-        Verify a claim by querying Wolfram Alpha
-        
-        Args:
-            query (str): The query to send to Wolfram Alpha
-            
-        Returns:
-            str: Wolfram Alpha's response
+        Query Wolfram Alpha Full Results API for the 'Result' pod in plaintext.
+        Return that plaintext if found, else return an error or fallback message.
         """
         try:
-            # Encode the query for URL
             encoded_query = quote_plus(query)
-            
-            # Build the full URL with parameters
-            url = f"{self.base_url}?appid={self.appid}&i={encoded_query}"
-            
-            # Send the request to Wolfram Alpha
+            url = (
+                f"{self.base_url}?appid={self.appid}"
+                f"&input={encoded_query}"
+                f"&includepodid=Result"
+                f"&format=plaintext"
+            )
             response = requests.get(url, timeout=10)
-            
-            # Check if the request was successful
             if response.status_code == 200:
-                return response.text
+                root = ET.fromstring(response.text)
+                result_pod = root.find(".//pod[@id='Result']")
+                if result_pod is not None:
+                    plaintext_elem = result_pod.find(".//plaintext")
+                    if plaintext_elem is not None and plaintext_elem.text:
+                        return plaintext_elem.text.strip()
+                    else:
+                        return "No plaintext result found."
+                else:
+                    return "No 'Result' pod found in the Wolfram Alpha response."
             else:
-                # Try with the simpler API if the first attempt fails
-                return self._fallback_verification(query)
-                
+                return f"Error: WolframAlpha API returned status code {response.status_code}"
         except Exception as e:
-            # If there's an error, try with a different API endpoint
-            return self._fallback_verification(query)
-    
-    def _fallback_verification(self, query):
-        """
-        Fallback method using a different Wolfram Alpha API endpoint
-        """
-        try:
-            # Encode the query for URL
-            encoded_query = quote_plus(query)
-            
-            # Use the spoken results API as an alternative
-            url = f"https://api.wolframalpha.com/v1/spoken?appid={self.appid}&i={encoded_query}"
-            
-            # Send the request to Wolfram Alpha
-            response = requests.get(url, timeout=10)
-            
-            if response.status_code == 200:
-                return response.text
-            else:
-                return f"Error: Unable to verify. Status code: {response.status_code}"
-                
-        except Exception as e:
-            return f"Error: {str(e)}" 
+            return f"Error during WolframAlpha query: {str(e)}"

@@ -1,5 +1,5 @@
 // Popup script for the NutriProof Chrome Extension
-const API_URL = 'http://localhost:5000/api/fact-check';
+const API_URL = 'http://localhost:5001/api/fact-check';
 let chartInstance = null;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Attempt to create chart with proper error handling
       try {
         console.log('Creating chart with results:', results);
-        createVerificationChart(results);
+        createVerificationChart(results);  // We'll reuse the same function name
       } catch (e) {
         console.error('Error creating chart:', e);
         document.getElementById('chart-container').innerHTML = 
@@ -130,17 +130,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const resultCard = document.createElement('div');
         resultCard.className = 'result-card';
         
-        // Determine the verification class for styling
-        let verificationClass = 'inconclusive';
-        if (result.verification && result.verification.includes('True')) {
-          verificationClass = 'true';
-        } else if (result.verification && result.verification.includes('False')) {
-          verificationClass = 'false';
+        // Determine the verdict class for styling
+        let verdictClass = 'inconclusive';
+        if (result.verdict && result.verdict.includes('True')) {
+          verdictClass = 'true';
+        } else if (result.verdict && result.verdict.includes('False')) {
+          verdictClass = 'false';
         }
         
         resultCard.innerHTML = `
           <div class="claim">${result.claim || 'Unknown claim'}</div>
-          <div class="verification ${verificationClass}">${result.verification || 'Unknown'}</div>
+          <div class="verification ${verdictClass}">
+            ${result.verdict || 'Inconclusive'}
+          </div>
           <details>
             <summary>Details</summary>
             <div class="details-content">
@@ -151,6 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="detail-item">
                 <span class="detail-label">Wolfram Response:</span>
                 <span class="detail-value">${result.wolfram_response || 'N/A'}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Final Answer:</span>
+                <span class="detail-value">${result.final_answer || 'N/A'}</span>
               </div>
             </div>
           </details>
@@ -168,8 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function createVerificationChart(results) {
-    // Count occurrences of each verification status
-    const verificationCounts = {
+    // Rename these to reflect "verdict" instead of "verification"
+    const verdictCounts = {
       'True': 0,
       'False': 0,
       'Approximately True': 0,
@@ -177,21 +183,22 @@ document.addEventListener('DOMContentLoaded', () => {
       'Inconclusive': 0
     };
     
-    // Process results to count each verification type
+    // Process results to count each verdict type
     results.forEach(result => {
-      if (!result.verification) {
-        verificationCounts['Inconclusive']++;
+      const v = result.verdict;
+      if (!v) {
+        verdictCounts['Inconclusive']++;
         return;
       }
       
-      if (verificationCounts.hasOwnProperty(result.verification)) {
-        verificationCounts[result.verification]++;
-      } else if (result.verification.includes('True')) {
-        verificationCounts['Approximately True']++;
-      } else if (result.verification.includes('False')) {
-        verificationCounts['Approximately False']++;
+      if (verdictCounts.hasOwnProperty(v)) {
+        verdictCounts[v]++;
+      } else if (v.includes('True')) {
+        verdictCounts['Approximately True']++;
+      } else if (v.includes('False')) {
+        verdictCounts['Approximately False']++;
       } else {
-        verificationCounts['Inconclusive']++;
+        verdictCounts['Inconclusive']++;
       }
     });
     
@@ -205,12 +212,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // Filter out zero values
-    const labels = Object.keys(verificationCounts).filter(key => verificationCounts[key] > 0);
-    const data = labels.map(key => verificationCounts[key]);
+    const labels = Object.keys(verdictCounts).filter(key => verdictCounts[key] > 0);
+    const data = labels.map(key => verdictCounts[key]);
     const backgroundColor = labels.map(key => chartColors[key]);
     
     if (labels.length === 0) {
-      throw new Error('No valid verification data to display');
+      throw new Error('No valid verdict data to display');
     }
     
     // Prepare data for Chart.js
@@ -298,4 +305,4 @@ document.addEventListener('DOMContentLoaded', () => {
     void chartContainer.offsetWidth; // Force reflow to restart animation
     chartContainer.style.animation = 'fadeIn 0.6s ease-in-out';
   }
-}); 
+});

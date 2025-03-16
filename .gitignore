@@ -54,3 +54,5 @@ debug_env.py
 # OS specific
 .DS_Store
 Thumbs.db 
+
+FINE_TUNE.md

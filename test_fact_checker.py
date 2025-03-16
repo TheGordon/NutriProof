@@ -35,7 +35,7 @@ def main():
         print(f"\nClaim {i}: {result['claim']}")
         print(f"Wolfram Query: {result['wolfram_query']}")
         print(f"Wolfram Response: {result['wolfram_response']}")
-        print(f"Verification: {result['verification']}")
+        print(f"Final Answer: {result['final_answer']}")
         print("-" * 50)
     
     # Save the results to a JSON file
@@ -45,4 +45,4 @@ def main():
     print(f"\nResults saved to test_results.json")
 
 if __name__ == "__main__":
-    main() 
+    main()
