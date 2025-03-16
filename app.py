@@ -1,11 +1,11 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Add this line
+from flask_cors import CORS 
 import os
 import json
 from services.fact_checker import FactChecker
 
 app = Flask(__name__)
-CORS(app)  # Add this line to enable CORS
+CORS(app)
 fact_checker = FactChecker()
 
 @app.route('/')
