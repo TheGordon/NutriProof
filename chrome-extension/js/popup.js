@@ -2,6 +2,93 @@
 const API_URL = 'http://localhost:5000/api/fact-check';
 let chartInstance = null;
 
+function calculateGrade(results) {
+  if (!results || results.length === 0) {
+    return { letter: 'N/A', score: 0, description: 'No claims to verify' };
+  }
+  
+  // Count different verification types for chart
+  const verificationCounts = {
+    'True': 0,
+    'False': 0,
+    'Approximately True': 0,
+    'Approximately False': 0,
+    'Inconclusive': 0
+  };
+  
+  // Process results to count each verification type
+  results.forEach(result => {
+    if (!result.verification) {
+      verificationCounts['Inconclusive']++;
+      return;
+    }
+    
+    if (verificationCounts.hasOwnProperty(result.verification)) {
+      verificationCounts[result.verification]++;
+    } else if (result.verification.includes('True') && !result.verification.includes('False')) {
+      verificationCounts['Approximately True']++;
+    } else if (result.verification.includes('False')) {
+      verificationCounts['Approximately False']++;
+    } else {
+      verificationCounts['Inconclusive']++;
+    }
+  });
+  // If all results are inconclusive, return N/A
+  if (results.length === verificationCounts['Inconclusive']) {
+    return { letter: 'N/A', score: 0, description: 'Insufficient data to grade' };
+  }
+  
+  // Calculate weighted score (exclude inconclusive from calculation)
+  const weights = {
+    'True': 10,
+    'Approximately True': 7.5,
+    'Approximately False': 2.5,
+    'False': 0
+  };
+  
+  const verifiableCount = 
+    results.length - verificationCounts['Inconclusive'];
+  
+  if (verifiableCount === 0) {
+    return { 
+      letter: 'N/A', 
+      score: 0, 
+      description: 'No verifiable claims' };
+  }
+  
+  const weightedSum = 
+    (verificationCounts['True'] * weights['True']) +
+    (verificationCounts['Approximately True'] * weights['Approximately True']) +
+    (verificationCounts['Approximately False'] * weights['Approximately False']) +
+    (verificationCounts['False'] * weights['False']);
+  
+  const averageScore = weightedSum / verifiableCount;
+    // Determine letter grade
+    let letter, description;
+    if (averageScore >= 9) {
+      letter = 'A';
+      description = 'Excellent - Highly accurate information';
+    } else if (averageScore >= 7.5) {
+      letter = 'B';
+      description = 'Good - Mostly accurate with minor issues';
+    } else if (averageScore >= 5) {
+      letter = 'C';
+      description = 'Fair - Mix of accurate and inaccurate information';
+    } else if (averageScore >= 2.5) {
+      letter = 'D';
+      description = 'Poor - Mostly inaccurate information';
+    } else {
+      letter = 'F';
+      description = 'Very poor - Contains serious inaccuracies';
+    }
+    
+    return {
+      letter,
+      score: parseFloat(averageScore.toFixed(1)),
+      description,
+      counts: verificationCounts
+    };
+}
 document.addEventListener('DOMContentLoaded', () => {
   console.log('NutriProof popup loaded');
   
@@ -110,19 +197,41 @@ document.addEventListener('DOMContentLoaded', () => {
     
     try {
       console.log('Displaying results:', results);
-      
+
+      clearResultsContent();
+
+      // Create a standard chart container
+      const chartContainer = document.getElementById('chart-container');
+      const canvas = document.createElement('canvas');
+      canvas.id = 'verification-chart';
+      chartContainer.appendChild(canvas);
+
+      const grade = calculateGrade(results);
+      console.log('Calculated grade:', grade);
+
       // Attempt to create chart with proper error handling
       try {
         console.log('Creating chart with results:', results);
-        createVerificationChart(results);
+        createVerificationChart(results); // Using original chart implementation
       } catch (e) {
         console.error('Error creating chart:', e);
-        document.getElementById('chart-container').innerHTML = 
-          `<div style="color: #f44336; text-align: center;">
+        chartContainer.innerHTML = `
+          <div style="color: #f44336; text-align: center; padding: 20px;">
             <p>Error creating chart: ${e.message}</p>
             <p>Results will still be displayed below.</p>
           </div>`;
       }
+
+      // Create a simple grade display under the chart
+      const gradeDisplay = document.createElement('div');
+      gradeDisplay.className = 'grade-summary';
+      gradeDisplay.innerHTML = `
+        <div class="grade-simple">
+          <span class="grade-letter grade-${grade.letter.toLowerCase()}">${grade.letter}</span>
+          <span class="grade-info">${grade.letter !== 'N/A' ? grade.score + '/10' : ''} - ${grade.description}</span>
+        </div>
+      `;
+      chartContainer.after(gradeDisplay);
       
       // Create result cards for each claim
       resultsList.innerHTML = '';
@@ -166,6 +275,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     resultsContainer.classList.remove('hidden');
   }
+
+  //Helper to clear content
+  function clearResultsContent() {
+    const chartContainer = document.getElementById('chart-container');
+    chartContainer.innerHTML = '';
+
+    if (chartInstance) {
+      chartInstance.destroy();
+      chartInstance = null;
+    }
+
+    const gradeContainer = document.querySelector('.grade-summary');
+    if(gradeContainer) {gradeContainer.innerHTML = '';}
+  }
   
   function createVerificationChart(results) {
     // Count occurrences of each verification status
@@ -205,7 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // Filter out zero values
-    const labels = Object.keys(verificationCounts).filter(key => verificationCounts[key] > 0);
+    const labels = Object
+      .keys(verificationCounts)
+      .filter(key => verificationCounts[key] > 0);
     const data = labels.map(key => verificationCounts[key]);
     const backgroundColor = labels.map(key => chartColors[key]);
     
@@ -214,6 +339,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Prepare data for Chart.js
+    const shortenedLabels = {
+      'True': 'True',
+      'False': 'False',
+      'Approximately True': 'Approx. True',
+      'Approximately False': 'Approx. False',
+      'Inconclusive': 'Unclear'
+    };
+
+    const formattedLabels = labels
+      .map(
+        label => shortenedLabels[label] || label
+      );
+
     const chartData = {
       labels: labels,
       datasets: [{
@@ -256,13 +394,45 @@ document.addEventListener('DOMContentLoaded', () => {
             return context.dataIndex * 100;
           }
         },
+        layout: {
+          padding: {
+            left: 10,
+            right: 10,
+            top: 0,
+            bottom: 0
+          }
+        },
         plugins: {
           legend: {
             position: 'right',
+            align: 'center',
             labels: {
+              boxWidth: 12,
+              boxHeight: 12,
+              padding: 15,
               font: {
                 family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
                 size: 12
+              },
+              generateLabels: function(chart) {
+                // Custom label generator with shorter text
+                const data = chart.data;
+                if (data.labels.length && data.datasets.length) {
+                  return data.labels.map((label, i) => {
+                    const meta = chart.getDatasetMeta(0);
+                    const style = meta.controller.getStyle(i);
+                    
+                    return {
+                      text: shortenedLabels[labels[i]] || labels[i],
+                      fillStyle: style.backgroundColor,
+                      strokeStyle: '#fff',
+                      lineWidth: 1,
+                      hidden: !chart.getDataVisibility(i),
+                      index: i
+                    };
+                  });
+                }
+                return [];
               },
               padding: 20,
               usePointStyle: true
@@ -273,7 +443,8 @@ document.addEventListener('DOMContentLoaded', () => {
               label: function(context) {
                 const label = context.label || '';
                 const value = context.raw || 0;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const total = context.dataset.data
+                  .reduce((a, b) => a + b, 0);
                 const percentage = Math.round((value * 100) / total) + '%';
                 return `${label}: ${value} (${percentage})`;
               }
