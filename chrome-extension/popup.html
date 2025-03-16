@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriProof</title>
+  <link href="css/popup.css" rel="stylesheet">
+  <script src="js/lib/chart.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>NutriProof</h1>
+    
+    <div id="loading" class="hidden">
+      <div class="spinner"></div>
+      <p>Checking facts...</p>
+    </div>
+    
+    <div id="error" class="hidden">
+      <div class="error-icon">!</div>
+      <p id="error-message">An error occurred.</p>
+    </div>
+    
+    <div id="content">
+      <div id="selected-text-container" class="hidden">
+        <h2>Selected Text:</h2>
+        <div id="selected-text" class="text-box"></div>
+      </div>
+      
+      <div id="results-container" class="hidden">
+        <h2>Fact Check Results:</h2>
+        <div id="chart-container">
+          <canvas id="verification-chart"></canvas>
+        </div>
+        <div id="results-list"></div>
+        <button id="check-again" class="check-again-button">Check Again</button>
+      </div>
+      
+      <div id="no-selection" class="hidden">
+        <p>Select text on a webpage, right-click, and choose "NutriProof" to check facts.</p>
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/popup.js"></script>
+</body>
+</html> 

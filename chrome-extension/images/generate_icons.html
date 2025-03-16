@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generate Fact Checker Icons</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .icon-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .icon-svg {
+      background-color: #3498db;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .size-16 {
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+    }
+    .size-48 {
+      width: 48px;
+      height: 48px;
+      font-size: 24px;
+    }
+    .size-128 {
+      width: 128px;
+      height: 128px;
+      font-size: 64px;
+    }
+    h2 {
+      margin-top: 40px;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fact Checker Icons</h1>
+  <p>Right-click each icon and select "Save image as..." to save them as PNG files named icon16.png, icon48.png, and icon128.png.</p>
+  
+  <div class="icon-container">
+    <div class="icon">
+      <svg class="icon-svg size-16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+        <text x="8" y="11" text-anchor="middle">FC</text>
+      </svg>
+      <span>16x16</span>
+    </div>
+    
+    <div class="icon">
+      <svg class="icon-svg size-48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <text x="24" y="32" text-anchor="middle">FC</text>
+      </svg>
+      <span>48x48</span>
+    </div>
+    
+    <div class="icon">
+      <svg class="icon-svg size-128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+        <text x="64" y="80" text-anchor="middle">FC</text>
+      </svg>
+      <span>128x128</span>
+    </div>
+  </div>
+  
+  <h2>Instructions</h2>
+  <ol>
+    <li>Right-click each icon and select "Save image as..."</li>
+    <li>Save them as PNG files with names:
+      <ul>
+        <li>icon16.png</li>
+        <li>icon48.png</li>
+        <li>icon128.png</li>
+      </ul>
+    </li>
+    <li>Place them in the images folder of your extension</li>
+  </ol>
+  
+  <h2>Alternative: Use Online Icon Generator</h2>
+  <p>Alternatively, you can use an online icon generator to create more professional icons.</p>
+</body>
+</html> 

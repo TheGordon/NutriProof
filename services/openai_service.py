@@ -43,7 +43,7 @@ class OpenAIService:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"}
+            response_format={"type": "json_object"},
         )
         
         content = response.choices[0].message.content
@@ -66,9 +66,13 @@ class OpenAIService:
         """
         prompt = f"""
         Convert the following factual claim into a concise, clear query optimized for Wolfram Alpha.
+        Extract only the factual claims, not opinions or questions.
         The query should be straightforward and directly solvable by Wolfram Alpha's computational engine.
         Return only the optimized query as plain text, without any explanations or additional formatting.
-        
+        Do NOT ask Wolfram Alpha questions, just provide the query. Avoid prepositions and conjunctions.
+        Example: "What is the capital of France?" -> "France Capital"
+        Example: "What is the population of the moon?" -> "Moon Population"
+        Example: "Number of bones in human body" -> "Human Body Bones Number"
         Claim: {claim}
         """
         

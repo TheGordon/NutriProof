@@ -1,4 +1,4 @@
-# Backend Fact Checker
+# NutriProof Project
 
 ## Features/Workflow
 

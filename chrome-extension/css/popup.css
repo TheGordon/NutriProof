@@ -1,0 +1,231 @@
+/* Popup styles for the NutriProof Chrome Extension */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  width: 560px;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.container {
+  padding: 16px;
+}
+
+h1 {
+  color: #2c3e50;
+  margin-top: 0;
+  font-size: 24px;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+h2 {
+  font-size: 16px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Loading spinner */
+#loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.spinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top: 3px solid #3498db;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error display */
+#error {
+  background-color: #ffebee;
+  border-left: 4px solid #f44336;
+  padding: 12px;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+}
+
+.error-icon {
+  font-weight: bold;
+  color: #f44336;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+/* Selected text display */
+.text-box {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 16px;
+  max-height: 100px;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Results list */
+#results-list {
+  margin-top: 8px;
+}
+
+.result-card {
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  margin-bottom: 12px;
+  padding: 12px;
+}
+
+.claim {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.verification {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.verification.true {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.verification.false {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.verification.inconclusive {
+  background-color: #fff8e1;
+  color: #f57f17;
+}
+
+/* Details section */
+details {
+  margin-top: 8px;
+}
+
+summary {
+  cursor: pointer;
+  color: #3498db;
+  font-size: 12px;
+}
+
+summary:hover {
+  text-decoration: underline;
+}
+
+.details-content {
+  margin-top: 8px;
+  font-size: 12px;
+  background-color: #f9f9f9;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.detail-item {
+  margin-bottom: 4px;
+}
+
+.detail-label {
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+/* No selection message */
+#no-selection {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+/* Chart container */
+#chart-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  height: 320px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+#chart-container:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+#verification-chart {
+  max-height: 100%;
+  width: 100%;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.check-again-button {
+  display: block;
+  margin: 15px auto;
+  padding: 10px 20px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.check-again-button:hover {
+  background-color: #0d8bf2;
+}
+
+.check-again-button:active {
+  background-color: #0b7ad1;
+} 
