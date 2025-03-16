@@ -1,0 +1,50 @@
+{
+    "manifest_version": 3,
+    "name": "Health Fact Checker",
+    "version": "1.0",
+    "description": "Chrome extension that fact-checks nutrition and health claims.",
+    "permissions": [
+        "activeTab",
+        "storage",
+        "scripting",
+        "contextMenus"
+    ],
+    "host_permissions": [
+        "http://localhost:5000/*"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup/popup.html",
+      "default_icon": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+      }
+    },
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["content.js"],
+        "run_at": "document_end"
+      }
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": ["styles.css", "templates/*"],
+        "matches": ["<all_urls>"]
+      }
+    ], 
+    "commands": {
+        "run-fact-check": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+F",
+                "mac": "Command+Shift+F"
+            },
+            "description": "Run fact-check on selected text"
+        }
+    }
+    
+  }
+  
