@@ -7,8 +7,8 @@ function calculateGrade(results) {
     return { letter: 'N/A', score: 0, description: 'No claims to verify' };
   }
   
-  // Count different verification types for chart
-  const verificationCounts = {
+  // Count different verdict types for grading
+  const verdictCounts = {
     'True': 0,
     'False': 0,
     'Approximately True': 0,
@@ -16,25 +16,26 @@ function calculateGrade(results) {
     'Inconclusive': 0
   };
   
-  // Process results to count each verification type
+  // Process results to count each verdict type (using the new field "verdict")
   results.forEach(result => {
-    if (!result.verification) {
-      verificationCounts['Inconclusive']++;
+    if (!result.verdict) {
+      verdictCounts['Inconclusive']++;
       return;
     }
     
-    if (verificationCounts.hasOwnProperty(result.verification)) {
-      verificationCounts[result.verification]++;
-    } else if (result.verification.includes('True') && !result.verification.includes('False')) {
-      verificationCounts['Approximately True']++;
-    } else if (result.verification.includes('False')) {
-      verificationCounts['Approximately False']++;
+    if (verdictCounts.hasOwnProperty(result.verdict)) {
+      verdictCounts[result.verdict]++;
+    } else if (result.verdict.includes('True') && !result.verdict.includes('False')) {
+      verdictCounts['Approximately True']++;
+    } else if (result.verdict.includes('False')) {
+      verdictCounts['Approximately False']++;
     } else {
-      verificationCounts['Inconclusive']++;
+      verdictCounts['Inconclusive']++;
     }
   });
+  
   // If all results are inconclusive, return N/A
-  if (results.length === verificationCounts['Inconclusive']) {
+  if (results.length === verdictCounts['Inconclusive']) {
     return { letter: 'N/A', score: 0, description: 'Insufficient data to grade' };
   }
   
@@ -46,49 +47,46 @@ function calculateGrade(results) {
     'False': 0
   };
   
-  const verifiableCount = 
-    results.length - verificationCounts['Inconclusive'];
+  const verifiableCount = results.length - verdictCounts['Inconclusive'];
   
   if (verifiableCount === 0) {
-    return { 
-      letter: 'N/A', 
-      score: 0, 
-      description: 'No verifiable claims' };
+    return { letter: 'N/A', score: 0, description: 'No verifiable claims' };
   }
   
   const weightedSum = 
-    (verificationCounts['True'] * weights['True']) +
-    (verificationCounts['Approximately True'] * weights['Approximately True']) +
-    (verificationCounts['Approximately False'] * weights['Approximately False']) +
-    (verificationCounts['False'] * weights['False']);
+    (verdictCounts['True'] * weights['True']) +
+    (verdictCounts['Approximately True'] * weights['Approximately True']) +
+    (verdictCounts['Approximately False'] * weights['Approximately False']) +
+    (verdictCounts['False'] * weights['False']);
   
   const averageScore = weightedSum / verifiableCount;
-    // Determine letter grade
-    let letter, description;
-    if (averageScore >= 9) {
-      letter = 'A';
-      description = 'Excellent - Highly accurate information';
-    } else if (averageScore >= 7.5) {
-      letter = 'B';
-      description = 'Good - Mostly accurate with minor issues';
-    } else if (averageScore >= 5) {
-      letter = 'C';
-      description = 'Fair - Mix of accurate and inaccurate information';
-    } else if (averageScore >= 2.5) {
-      letter = 'D';
-      description = 'Poor - Mostly inaccurate information';
-    } else {
-      letter = 'F';
-      description = 'Very poor - Contains serious inaccuracies';
-    }
-    
-    return {
-      letter,
-      score: parseFloat(averageScore.toFixed(1)),
-      description,
-      counts: verificationCounts
-    };
+  
+  let letter, description;
+  if (averageScore >= 9) {
+    letter = 'A';
+    description = 'Excellent - Highly accurate information';
+  } else if (averageScore >= 7.5) {
+    letter = 'B';
+    description = 'Good - Mostly accurate with minor issues';
+  } else if (averageScore >= 5) {
+    letter = 'C';
+    description = 'Fair - Mix of accurate and inaccurate information';
+  } else if (averageScore >= 2.5) {
+    letter = 'D';
+    description = 'Poor - Mostly inaccurate information';
+  } else {
+    letter = 'F';
+    description = 'Very poor - Contains serious inaccuracies';
+  }
+  
+  return {
+    letter,
+    score: parseFloat(averageScore.toFixed(1)),
+    description,
+    counts: verdictCounts
+  };
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('NutriProof popup loaded');
   
@@ -200,11 +198,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       clearResultsContent();
 
-      // Calculate grade first
+      // Calculate grade first using the new "verdict" field
       const grade = calculateGrade(results);
       console.log('Calculated grade:', grade);
 
-      // Create a grade display BEFORE the chart (moved up)
+      // Create a grade display BEFORE the chart
       const gradeDisplay = document.createElement('div');
       gradeDisplay.className = 'grade-summary';
       gradeDisplay.innerHTML = `
@@ -217,23 +215,20 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
       
-      // Get the results container and insert the grade at the top
-      const resultsContainer = document.getElementById('results-container');
+      // Insert the grade display at the top of the results container, before the chart container
       const chartContainer = document.getElementById('chart-container');
-      
-      // Insert grade before chart container
       resultsContainer.insertBefore(gradeDisplay, chartContainer);
       
-      // Now set up the chart (which will be below the grade)
-      chartContainer.style.height = '250px'; // Make chart smaller
+      // Set up the chart container
+      chartContainer.style.height = '250px';
       const canvas = document.createElement('canvas');
       canvas.id = 'verification-chart';
       chartContainer.appendChild(canvas);
 
-      // Attempt to create chart with proper error handling
+      // Create chart with proper error handling
       try {
         console.log('Creating chart with results:', results);
-        createVerificationChart(results);  // We'll reuse the same function name
+        createVerificationChart(results);
       } catch (e) {
         console.error('Error creating chart:', e);
         chartContainer.innerHTML = `
@@ -292,31 +287,28 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsContainer.classList.remove('hidden');
   }
 
-  //Helper to clear content
+  // Helper to clear existing results content
   function clearResultsContent() {
-    // Remove any existing grade summary
     const existingGradeSummary = document.querySelector('.grade-summary');
     if (existingGradeSummary) {
       existingGradeSummary.remove();
     }
     
-    // Clear chart container
     const chartContainer = document.getElementById('chart-container');
     chartContainer.innerHTML = '';
-    chartContainer.style.height = '250px'; // Reset height
-
+    chartContainer.style.height = '250px';
+    
     if (chartInstance) {
       chartInstance.destroy();
       chartInstance = null;
     }
     
-    // Clear results list
     const resultsList = document.getElementById('results-list');
     resultsList.innerHTML = '';
   }
   
   function createVerificationChart(results) {
-    // Rename these to reflect "verdict" instead of "verification"
+    // Count verdict types for chart
     const verdictCounts = {
       'True': 0,
       'False': 0,
@@ -325,7 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
       'Inconclusive': 0
     };
     
-    // Process results to count each verdict type
     results.forEach(result => {
       const v = result.verdict;
       if (!v) {
@@ -346,26 +337,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Define colors for the pie chart
     const chartColors = {
-      'True': '#4caf50', // Green
-      'False': '#c62828', // Red
-      'Approximately True': '#89a832', // Light green
-      'Approximately False': '#ffc107', // Light red
-      'Inconclusive': '#777875' // Grey
+      'True': '#4caf50',
+      'False': '#c62828',
+      'Approximately True': '#89a832',
+      'Approximately False': '#ffc107',
+      'Inconclusive': '#777875'
     };
     
-    // Define a specific order to group similar verification types together
+    // Define a specific order to group verdict types
     const orderedLabels = ['True', 'Approximately True', 'False', 'Approximately False', 'Inconclusive'];
     
-    // Filter out zero values while maintaining the desired order
-    const labels = orderedLabels.filter(key => verificationCounts[key] > 0);
-    const data = labels.map(key => verificationCounts[key]);
+    const labels = orderedLabels.filter(key => verdictCounts[key] > 0);
+    const data = labels.map(key => verdictCounts[key]);
     const backgroundColor = labels.map(key => chartColors[key]);
     
     if (labels.length === 0) {
       throw new Error('No valid verdict data to display');
     }
     
-    // Prepare data for Chart.js
     const shortenedLabels = {
       'True': 'True',
       'False': 'False',
@@ -373,12 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'Approximately False': 'Approx. False',
       'Inconclusive': 'Unclear'
     };
-
-    const formattedLabels = labels
-      .map(
-        label => shortenedLabels[label] || label
-      );
-
+    
     const chartData = {
       labels: labels,
       datasets: [{
@@ -390,21 +374,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }]
     };
     
-    // Get the canvas element
     const canvas = document.getElementById('verification-chart');
     const ctx = canvas.getContext('2d');
     
-    // Destroy previous chart instance if it exists
     if (chartInstance) {
       chartInstance.destroy();
     }
     
     console.log('Creating pie chart with data:', chartData);
     
-    // Clear the canvas before creating a new chart
     canvas.width = canvas.width;
     
-    // Create the pie chart with animations
     chartInstance = new Chart(ctx, {
       type: 'pie',
       data: chartData,
@@ -417,7 +397,6 @@ document.addEventListener('DOMContentLoaded', () => {
           duration: 1000,
           easing: 'easeOutQuart',
           delay: function(context) {
-            // Stagger the animation for each segment
             return context.dataIndex * 100;
           }
         },
@@ -442,13 +421,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 size: 12
               },
               generateLabels: function(chart) {
-                // Custom label generator with shorter text
                 const data = chart.data;
                 if (data.labels.length && data.datasets.length) {
                   return data.labels.map((label, i) => {
                     const meta = chart.getDatasetMeta(0);
                     const style = meta.controller.getStyle(i);
-                    
                     return {
                       text: shortenedLabels[labels[i]] || labels[i],
                       fillStyle: style.backgroundColor,
@@ -461,7 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return [];
               },
-              padding: 20,
               usePointStyle: true
             }
           },
@@ -470,8 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
               label: function(context) {
                 const label = context.label || '';
                 const value = context.raw || 0;
-                const total = context.dataset.data
-                  .reduce((a, b) => a + b, 0);
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
                 const percentage = Math.round((value * 100) / total) + '%';
                 return `${label}: ${value} (${percentage})`;
               }
@@ -490,10 +465,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     
-    // Add visual appeal by animating the container when chart is created
     const chartContainer = document.getElementById('chart-container');
     chartContainer.style.animation = 'none';
-    void chartContainer.offsetWidth; // Force reflow to restart animation
+    void chartContainer.offsetWidth;
     chartContainer.style.animation = 'fadeIn 0.6s ease-in-out';
   }
 });
