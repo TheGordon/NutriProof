@@ -3,9 +3,10 @@
 ## Features/Workflow
 
 - Utilizes GPT-4o to extract factual claims from input text
+- Fine-tunes GPT-4o's performance for identifying and judging nutrientional/health related claims. 
 - Reformats claims into queries optimized for Wolfram Alpha
 - Processes claims through Wolfram Alpha for mathematical/factual accuracy
-- enerates JSON records of claims, verification steps, and results
+- Generates JSON records of claims, verification steps, and results
 - Maintains a timestamped history of all fact-checking operations
 
 
